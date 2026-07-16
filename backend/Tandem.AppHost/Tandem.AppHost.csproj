@@ -8,4 +8,8 @@
     <UserSecretsId>b2114e49-be37-4834-ac5a-58750390fcef</UserSecretsId>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Services\Authentication\Authentication.API\Authentication.API.csproj" />
+  </ItemGroup>
+
 </Project>
