@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="Tandem.AppHost/Tandem.AppHost.csproj" />
+  <Project Path="Tandem.ServiceDefaults/Tandem.ServiceDefaults.csproj" />
+</Solution>
