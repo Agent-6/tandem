@@ -2,6 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
+  <Project Path="Tandem.Api/Tandem.Api.csproj" />
   <Project Path="Tandem.AppHost/Tandem.AppHost.csproj" />
   <Project Path="Tandem.ServiceDefaults/Tandem.ServiceDefaults.csproj" />
 </Solution>
