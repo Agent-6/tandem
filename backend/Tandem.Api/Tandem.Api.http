@@ -1,0 +1,6 @@
+@Tandem.Api_HostAddress = http://localhost:5072
+
+GET {{Tandem.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
