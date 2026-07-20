@@ -6,6 +6,8 @@
   <Folder Name="/Services/Tandem/" />
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="Tandem.AppHost/Tandem.AppHost.csproj" />
   <Project Path="Tandem.ServiceDefaults/Tandem.ServiceDefaults.csproj" />
