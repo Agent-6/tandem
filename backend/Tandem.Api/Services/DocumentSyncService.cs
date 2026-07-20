@@ -86,7 +86,9 @@ public class DocumentSyncService : IDisposable
     /// <summary>
     /// Stores the accumulated state snapshot to PostgreSQL.
     /// </summary>
-    public async Task FlushToDatabase(string documentId)
+    /// <param name="documentId">The document to flush.</param>
+    /// <param name="force">If true, save even without pending updates (e.g., before eviction).</param>
+    public async Task FlushToDatabase(string documentId, bool force = false)
     {
         if (!_activeDocuments.TryGetValue(documentId, out var state))
             return;
@@ -94,24 +96,31 @@ public class DocumentSyncService : IDisposable
         byte[] stateToSave;
         string? userId;
         bool shouldCreateVersion;
+        bool hasChanges;
 
         lock (state.Lock)
         {
-            if (state.PendingUpdates.Count == 0)
-                return;
+            hasChanges = state.PendingUpdates.Count > 0;
 
             // The current state is the full Yjs doc state (set by the client's full state sync)
             stateToSave = state.CurrentState;
             userId = state.LastUpdatedBy;
 
-            shouldCreateVersion = DateTime.UtcNow - state.LastVersionSnapshot > _versionInterval;
+            shouldCreateVersion = hasChanges && (DateTime.UtcNow - state.LastVersionSnapshot > _versionInterval);
             if (shouldCreateVersion)
             {
                 state.LastVersionSnapshot = DateTime.UtcNow;
             }
 
-            state.PendingUpdates.Clear();
+            if (hasChanges)
+            {
+                state.PendingUpdates.Clear();
+            }
         }
+
+        // Always save if there are changes OR if this was a forced flush (e.g., before eviction)
+        if (!hasChanges && !force && !shouldCreateVersion)
+            return;
 
         try
         {
@@ -162,12 +171,34 @@ public class DocumentSyncService : IDisposable
     }
 
     /// <summary>
+    /// Forces an immediate flush of pending updates to the database.
+    /// Called when the user explicitly saves or when the document is being evicted.
+    /// </summary>
+    public async Task ForceFlushAsync(string documentId)
+    {
+        if (!_activeDocuments.TryGetValue(documentId, out var state))
+            return;
+
+        lock (state.Lock)
+        {
+            // Cancel the debounce timer so it doesn't try to save again
+            state.DebounceCts?.Cancel();
+            state.DebounceCts?.Dispose();
+            state.DebounceCts = null;
+        }
+
+        // Force flush even without pending updates (CurrentState may have been updated via SetFullState)
+        await FlushToDatabase(documentId, force: true);
+    }
+
+    /// <summary>
     /// Removes a document from in-memory tracking (e.g., when all clients disconnect).
-    /// Flushes any pending updates first.
+    /// Forces a flush of any pending updates first.
     /// </summary>
     public async Task EvictDocumentAsync(string documentId)
     {
-        await FlushToDatabase(documentId);
+        // Force flush to ensure all pending updates are saved
+        await ForceFlushAsync(documentId);
         _activeDocuments.TryRemove(documentId, out _);
         _logger.LogInformation("Evicted document {DocumentId} from memory", documentId);
     }

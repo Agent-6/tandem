@@ -98,10 +98,32 @@ public class DocumentHub : Hub
 
     /// <summary>
     /// Receives a full Yjs state sync from a client (used for initial state reconciliation).
+    /// Persists the state immediately.
     /// </summary>
     public async Task SendFullState(string documentId, byte[] fullState)
     {
         _syncService.SetFullState(documentId, fullState);
+        // Also persist to ensure the state is saved
+        await _syncService.ForceFlushAsync(documentId);
+    }
+
+    /// <summary>
+    /// Forces an immediate save of the document state to the database.
+    /// Called when the user explicitly saves or when leaving the document.
+    /// </summary>
+    public async Task SaveDocument(string documentId)
+    {
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return;
+
+        if (!await HasDocumentAccessAsync(documentId, userId))
+        {
+            _logger.LogWarning("User {UserId} denied save access to document {DocumentId}", userId, documentId);
+            return;
+        }
+
+        await _syncService.ForceFlushAsync(documentId);
+        _logger.LogInformation("Document {DocumentId} manually saved by user {UserId}", documentId, userId);
     }
 
     /// <summary>
