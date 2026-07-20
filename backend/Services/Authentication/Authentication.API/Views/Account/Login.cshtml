@@ -1,0 +1,65 @@
+@model Authentication.API.Models.LoginModel
+@{
+    ViewData["Title"] = "Sign In";
+}
+
+<div class="w-full max-w-md mx-auto">
+    <div class="card">
+        <div class="card-header text-center">
+            <div class="mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 mx-auto text-foreground">
+                    <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+                </svg>
+            </div>
+            <h1 class="card-title">Welcome back</h1>
+            <p class="card-description">Enter your credentials to sign in to your account</p>
+        </div>
+        <div class="card-content">
+            <form asp-action="Login" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+
+                @if (ViewData["ReturnUrl"] != null)
+                {
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                }
+
+                <div asp-validation-summary="All" class="alert-destructive mb-4" style="@(ViewContext.ModelState.ErrorCount > 0 ? "" : "display:none")"></div>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label asp-for="Email" class="label">Email</label>
+                        <input asp-for="Email" class="input-field" type="email" placeholder="name@example.com" autocomplete="email" autofocus />
+                        <span asp-validation-for="Email" class="text-xs text-destructive"></span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label asp-for="Password" class="label">Password</label>
+                            <a href="/Account/ForgotPassword" class="btn-link text-xs">Forgot password?</a>
+                        </div>
+                        <input asp-for="Password" class="input-field" type="password" placeholder="••••••••" autocomplete="current-password" />
+                        <span asp-validation-for="Password" class="text-xs text-destructive"></span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input asp-for="RememberMe" class="checkbox-field" type="checkbox" />
+                        <label asp-for="RememberMe" class="text-sm text-muted-foreground cursor-pointer">Remember me</label>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer flex-col space-y-4">
+            <div class="separator"></div>
+            <p class="text-sm text-muted-foreground text-center">
+                Don&rsquo;t have an account?
+                <a href="/Account/Register" class="text-foreground underline underline-offset-4 hover:text-primary transition-colors">
+                    Sign up
+                </a>
+            </p>
+        </div>
+    </div>
+</div>

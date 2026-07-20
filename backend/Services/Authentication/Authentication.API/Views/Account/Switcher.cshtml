@@ -1,0 +1,75 @@
+@model IList<System.Security.Claims.ClaimsIdentity>
+@{
+    ViewData["Title"] = "Switch Account";
+}
+
+<div class="w-full max-w-md mx-auto">
+    <div class="card">
+        <div class="card-header text-center">
+            <div class="mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 mx-auto text-foreground">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <polyline points="16 11 18 13 22 9" />
+                </svg>
+            </div>
+            <h1 class="card-title">Switch Account</h1>
+            <p class="card-description">Choose an account to continue</p>
+        </div>
+        <div class="card-content">
+            @if (Model != null && Model.Any())
+            {
+                <div class="space-y-2">
+                    @foreach (var identity in Model)
+                    {
+                        var email = identity.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "Unknown";
+                        var name = identity.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? email;
+                        var displayName = identity.FindFirst("displayName")?.Value;
+                        var initials = string.IsNullOrEmpty(displayName)
+                            ? email.Substring(0, 1).ToUpper()
+                            : string.Join("", displayName.Split(' ').Take(2).Select(w => w[0])).ToUpper();
+
+                        <form asp-action="SwitchAccount" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="email" value="@email" />
+                            @if (ViewData["ReturnUrl"] != null)
+                            {
+                                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                            }
+                            <button type="submit" class="w-full flex items-center gap-4 rounded-lg border border-input p-4 text-left
+                                                         hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
+                                    @initials
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium truncate">@(displayName ?? name)</p>
+                                    <p class="text-xs text-muted-foreground truncate">@email</p>
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-muted-foreground">
+                                    <polyline points="9 18 15 12 9 6" />
+                                </svg>
+                            </button>
+                        </form>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8">
+                    <p class="text-sm text-muted-foreground">No authenticated accounts found.</p>
+                </div>
+            }
+        </div>
+        <div class="card-footer flex-col space-y-4">
+            <div class="separator"></div>
+            <div class="flex flex-col gap-2 w-full">
+                <a href="/Account/Login" class="btn-outline text-center">
+                    Sign in with a different account
+                </a>
+                <a href="/Account/Logout" class="btn-ghost text-center text-muted-foreground">
+                    Sign out
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

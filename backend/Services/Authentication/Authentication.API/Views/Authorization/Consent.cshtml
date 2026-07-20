@@ -1,0 +1,108 @@
+@using OpenIddict.Abstractions
+@model OpenIddict.Abstractions.OpenIddictRequest
+@{
+    ViewData["Title"] = "Authorization Consent";
+}
+
+<div class="w-full max-w-lg mx-auto">
+    <div class="card">
+        <div class="card-header text-center">
+            <div class="mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-10 w-10 mx-auto text-foreground">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+            </div>
+            <h1 class="card-title">Permissions Requested</h1>
+            <p class="card-description">
+                <span class="font-medium text-foreground">@ViewData["ClientName"]</span> is requesting permission to access your Tandem account.
+            </p>
+        </div>
+        <div class="card-content">
+            <div class="space-y-4">
+                <p class="text-sm text-muted-foreground font-medium">This application will be able to:</p>
+                <div class="space-y-3">
+                    @if (Model != null)
+                    {
+                        @foreach (var scope in Model.GetScopes())
+                        {
+                            <div class="flex items-start gap-3 p-3 rounded-md bg-secondary/50 border border-border/50">
+                                <div class="mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 text-primary">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold uppercase tracking-wider text-foreground">@scope</span>
+                                    </div>
+                                    <p class="text-xs text-muted-foreground mt-0.5">
+                                        @switch (scope)
+                                        {
+                                            case "openid":
+                                                @:Sign in using your identity.
+                                                break;
+                                            case "profile":
+                                                @:Access your profile details (name, display name, avatar).
+                                                break;
+                                            case "email":
+                                                @:Access your email address.
+                                                break;
+                                            case "roles":
+                                                @:Access your user role assignments.
+                                                break;
+                                            case "offline_access":
+                                                @:Maintain access to your account data even when you are not actively using the app.
+                                                break;
+                                            case "tandem.api":
+                                                @:Read, write, edit, and collaborate on your Tandem documents.
+                                                break;
+                                            default:
+                                                @:Access to scope resources for '@scope'.
+                                                break;
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="card-footer flex-col gap-3">
+            <div class="separator"></div>
+            <form asp-action="Authorize" asp-controller="Authorization" method="post" class="w-full space-y-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="client_id" value="@Model?.ClientId" />
+                <input type="hidden" name="redirect_uri" value="@Model?.RedirectUri" />
+                <input type="hidden" name="response_type" value="@Model?.ResponseType" />
+                <input type="hidden" name="scope" value="@string.Join(" ", Model?.GetScopes())" />
+                <input type="hidden" name="response_mode" value="@Model?.ResponseMode" />
+                <input type="hidden" name="nonce" value="@Model?.Nonce" />
+                <input type="hidden" name="code_challenge" value="@Model?.CodeChallenge" />
+                <input type="hidden" name="code_challenge_method" value="@Model?.CodeChallengeMethod" />
+                
+                @if (!string.IsNullOrEmpty(Model?.State))
+                {
+                    <input type="hidden" name="state" value="@Model.State" />
+                }
+                
+                @if (!string.IsNullOrEmpty(Model?.Nonce))
+                {
+                    <input type="hidden" name="nonce" value="@Model.Nonce" />
+                }
+
+                <div class="flex flex-col sm:flex-row gap-2 w-full">
+                    <button type="submit" name="submit.Accept" class="btn-primary flex-1">
+                        Allow Access
+                    </button>
+                    <button type="submit" name="submit.Deny" class="btn-outline flex-1">
+                        Deny
+                    </button>
+                </div>
+            </form>
+            <p class="text-xs text-muted-foreground text-center mt-2">
+                You will be redirected back to <span class="font-medium text-foreground">@Model?.RedirectUri</span>
+            </p>
+        </div>
+    </div>
+</div>

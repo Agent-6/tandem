@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Tandem Identity Service";
+}
+
+<div class="w-full max-w-lg mx-auto">
+    <div class="card">
+        <div class="card-header text-center">
+            <div class="mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12 mx-auto text-primary">
+                    <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+                </svg>
+            </div>
+            <h1 class="card-title text-3xl font-bold tracking-tight">Tandem Identity</h1>
+            <p class="card-description">Secure Authentication & SSO Service</p>
+        </div>
+        <div class="card-content text-center space-y-6">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="p-4 rounded-lg bg-secondary/30 border border-border/80 text-left">
+                    <h2 class="text-sm font-semibold text-muted-foreground mb-3">Logged In As</h2>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold uppercase">
+                            @(User.FindFirst("displayName")?.Value?.Substring(0, 1) ?? User.Identity.Name?.Substring(0, 1) ?? "U")
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">@(User.FindFirst("displayName")?.Value ?? User.Identity.Name)</p>
+                            <p class="text-xs text-muted-foreground">@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</p>
+                        </div>
+                    </div>
+                    <div class="text-xs space-y-1 text-muted-foreground border-t border-border/50 pt-3">
+                        <p><span class="font-medium text-foreground">Subject:</span> @User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value</p>
+                        <p><span class="font-medium text-foreground">Roles:</span> @string.Join(", ", User.FindAll("roles").Select(c => c.Value))</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <a href="/Account/Switcher" class="btn-secondary flex-1">
+                        Switch Account
+                    </a>
+                    <a href="/Account/Logout" class="btn-destructive flex-1">
+                        Sign Out
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="p-6 rounded-lg bg-secondary/20 border border-dashed border-border/60">
+                    <p class="text-sm text-muted-foreground">
+                        You are not signed in. Access is restricted to authorized Tandem applications.
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <a href="/Account/Login" class="btn-primary">
+                        Sign In
+                    </a>
+                    <a href="/Account/Register" class="btn-outline">
+                        Create Account
+                    </a>
+                </div>
+            }
+        </div>
+        <div class="card-footer justify-center text-xs text-muted-foreground border-t border-border/30 pt-4 mt-2">
+            Powered by OpenIddict & ASP.NET Core Identity
+        </div>
+    </div>
+</div>
