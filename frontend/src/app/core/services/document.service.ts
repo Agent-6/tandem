@@ -20,8 +20,8 @@ export class DocumentService {
   // --- Document CRUD ---
 
   getAll(): Observable<Document[]> {
-    return this.http.get<{ Owned: DocumentListItem[]; Shared: DocumentListItem[] }>(this.baseUrl).pipe(
-      map(response => [...response.Owned, ...response.Shared].map(item => ({
+    return this.http.get<{ owned: DocumentListItem[]; shared: DocumentListItem[] }>(this.baseUrl).pipe(
+      map(response => [...(response.owned || []), ...(response.shared || [])].map(item => ({
         id: item.id,
         title: item.title,
         ownerId: item.ownerId,
@@ -49,7 +49,7 @@ export class DocumentService {
   }
 
   updateTitle(id: string, title: string): Observable<void> {
-    return this.http.patch<void>(`${this.baseUrl}/${id}`, { title });
+    return this.http.put<void>(`${this.baseUrl}/${id}`, { title });
   }
 
   delete(id: string): Observable<void> {
