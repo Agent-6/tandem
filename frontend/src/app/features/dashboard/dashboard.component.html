@@ -1,0 +1,160 @@
+<div class="dashboard">
+  <!-- Header -->
+  <header class="dashboard-header glass">
+    <div class="header-left">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="url(#dash-logo)" />
+          <path d="M12 14h16v3H22v12h-4V17h-6v-3z" fill="#fff" />
+          <defs>
+            <linearGradient id="dash-logo" x1="0" y1="0" x2="40" y2="40">
+              <stop stop-color="#7c5cff" />
+              <stop offset="1" stop-color="#00d4aa" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">Tandem</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-primary" (click)="openCreate()" id="btn-new-doc">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/>
+        </svg>
+        New Document
+      </button>
+      <div class="user-menu">
+        @if (auth.user(); as user) {
+          <div class="avatar" [style.background]="user.avatarColor || '#7c5cff'">
+            {{ getInitials(user.displayName) }}
+          </div>
+        }
+        <button class="btn-ghost" (click)="auth.logout()" id="btn-logout">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M2 3a1 1 0 011-1h5a.75.75 0 010 1.5H3.5v9H8A.75.75 0 018 14H3a1 1 0 01-1-1V3z"/>
+            <path d="M12.78 7.47a.75.75 0 010 1.06l-2.25 2.25a.75.75 0 11-1.06-1.06l.97-.97H5.75a.75.75 0 010-1.5h4.69l-.97-.97a.75.75 0 111.06-1.06l2.25 2.25z"/>
+          </svg>
+          Sign out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="dashboard-content">
+    <div class="content-header">
+      <h2 class="content-title">My Documents</h2>
+      <p class="content-subtitle">{{ documents().length }} document{{ documents().length !== 1 ? 's' : '' }}</p>
+    </div>
+
+    @if (loading()) {
+      <div class="docs-grid">
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <div class="doc-card-skeleton">
+            <div class="skeleton" style="width: 60%; height: 18px; margin-bottom: 12px"></div>
+            <div class="skeleton" style="width: 40%; height: 14px; margin-bottom: 20px"></div>
+            <div class="skeleton" style="width: 30%; height: 12px"></div>
+          </div>
+        }
+      </div>
+    } @else if (documents().length === 0) {
+      <div class="empty-state animate-fade-in">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <rect x="12" y="8" width="40" height="48" rx="4" stroke="var(--text-muted)" stroke-width="2" fill="none"/>
+            <line x1="20" y1="20" x2="44" y2="20" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="20" y1="28" x2="38" y2="28" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/>
+            <line x1="20" y1="36" x2="42" y2="36" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="empty-title">No documents yet</h3>
+        <p class="empty-text">Create your first document to start collaborating in real-time.</p>
+        <button class="btn-primary btn-lg" (click)="openCreate()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/>
+          </svg>
+          Create Document
+        </button>
+      </div>
+    } @else {
+      <div class="docs-grid animate-fade-in">
+        @for (doc of documents(); track doc.id) {
+          <div class="doc-card card-interactive" (click)="openDocument(doc)" [id]="'doc-' + doc.id">
+            <div class="doc-card-header">
+              <div class="doc-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" opacity="0.15"/>
+                  <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <button
+                class="btn-icon doc-delete"
+                (click)="confirmDelete(doc, $event)"
+                title="Delete"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+                  <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1zM4.118 4L4 4.059V13a1 1 0 001 1h6a1 1 0 001-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                </svg>
+              </button>
+            </div>
+            <h3 class="doc-title">{{ doc.title }}</h3>
+            <div class="doc-meta">
+              <span class="doc-role badge-success" *ngIf="doc.role === 'Owner'">Owner</span>
+              <span class="doc-role badge-warning" *ngIf="doc.role === 'Editor'">Editor</span>
+              <span class="doc-role badge-danger" *ngIf="doc.role === 'Viewer'">Viewer</span>
+              <span class="doc-time">{{ getTimeAgo(doc.updatedAt) }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </main>
+
+  <!-- Create Dialog -->
+  @if (showCreateDialog()) {
+    <div class="modal-backdrop" (click)="closeCreate()"></div>
+    <div class="modal animate-fade-in">
+      <h2 class="modal-title">New Document</h2>
+      <form [formGroup]="createForm" (ngSubmit)="createDocument()">
+        <div class="form-group">
+          <label class="form-label" for="new-doc-title">Document title</label>
+          <input
+            id="new-doc-title"
+            class="input"
+            type="text"
+            formControlName="title"
+            placeholder="Untitled Document"
+            (keydown.enter)="createDocument()"
+            [disabled]="creating()"
+            autofocus
+          />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeCreate()" [disabled]="creating()">Cancel</button>
+          <button type="submit" class="btn-primary" [disabled]="creating() || createForm.invalid" id="btn-create-doc">
+            @if (creating()) {
+              <span class="spinner"></span>
+            }
+            Create
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Delete Confirmation -->
+  @if (deleteTarget(); as doc) {
+    <div class="modal-backdrop" (click)="cancelDelete()"></div>
+    <div class="modal animate-fade-in">
+      <h2 class="modal-title">Delete Document</h2>
+      <p style="color: var(--text-secondary); font-size: var(--text-sm);">
+        Are you sure you want to delete <strong>{{ doc.title }}</strong>? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn-danger" (click)="deleteDocument()" id="btn-confirm-delete">Delete</button>
+      </div>
+    </div>
+  }
+</div>

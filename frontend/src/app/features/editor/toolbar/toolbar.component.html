@@ -1,0 +1,191 @@
+<div class="toolbar">
+  <div class="toolbar-group">
+    <button
+      class="btn-icon"
+      [class.active]="isActive('bold')"
+      [disabled]="!editor"
+      (click)="toggleBold.emit()"
+      title="Bold (Ctrl+B)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+        <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('italic')"
+      [disabled]="!editor"
+      (click)="toggleItalic.emit()"
+      title="Italic (Ctrl+I)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="4" x2="10" y2="4"></line>
+        <line x1="14" y1="20" x2="5" y2="20"></line>
+        <line x1="15" y1="4" x2="9" y2="20"></line>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('underline')"
+      [disabled]="!editor"
+      (click)="toggleUnderline.emit()"
+      title="Underline (Ctrl+U)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+        <line x1="4" y1="21" x2="20" y2="21"></line>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('strike')"
+      [disabled]="!editor"
+      (click)="toggleStrike.emit()"
+      title="Strikethrough"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12h14"></path>
+        <path d="M4 6a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4"></path>
+        <path d="M4 18a4 4 0 0 0 4 4h8a4 4 0 0 0 4-4"></path>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('code')"
+      [disabled]="!editor"
+      (click)="toggleCode.emit()"
+      title="Code"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="toolbar-group">
+    <button
+      class="btn-icon"
+      [class.active]="isActive('heading', { level: 1 })"
+      [disabled]="!editor"
+      (click)="toggleHeading.emit(1)"
+      title="Heading 1"
+    >
+      <span class="heading-badge">H1</span>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('heading', { level: 2 })"
+      [disabled]="!editor"
+      (click)="toggleHeading.emit(2)"
+      title="Heading 2"
+    >
+      <span class="heading-badge">H2</span>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('heading', { level: 3 })"
+      [disabled]="!editor"
+      (click)="toggleHeading.emit(3)"
+      title="Heading 3"
+    >
+      <span class="heading-badge">H3</span>
+    </button>
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="toolbar-group">
+    <button
+      class="btn-icon"
+      [class.active]="isActive('bulletList')"
+      [disabled]="!editor"
+      (click)="toggleBulletList.emit()"
+      title="Bullet List"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="8" y1="6" x2="21" y2="6"></line>
+        <line x1="8" y1="12" x2="21" y2="12"></line>
+        <line x1="8" y1="18" x2="21" y2="18"></line>
+        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('orderedList')"
+      [disabled]="!editor"
+      (click)="toggleOrderedList.emit()"
+      title="Ordered List"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="10" y1="6" x2="21" y2="6"></line>
+        <line x1="10" y1="12" x2="21" y2="12"></line>
+        <line x1="10" y1="18" x2="21" y2="18"></line>
+        <path d="M4 6h1v4"></path>
+        <path d="M4 10h2"></path>
+        <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [class.active]="isActive('taskList')"
+      [disabled]="!editor"
+      (click)="toggleTaskList.emit()"
+      title="Task List"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 11 12 14 22 4"></polyline>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="toolbar-group">
+    <button
+      class="btn-icon"
+      [class.active]="isActive('blockquote')"
+      [disabled]="!editor"
+      (click)="toggleBlockquote.emit()"
+      title="Blockquote"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+        <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="toolbar-group">
+    <button
+      class="btn-icon"
+      [disabled]="!canUndo()"
+      (click)="undo.emit()"
+      title="Undo (Ctrl+Z)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7v6h6"></path>
+        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+      </svg>
+    </button>
+    <button
+      class="btn-icon"
+      [disabled]="!canRedo()"
+      (click)="redo.emit()"
+      title="Redo (Ctrl+Y)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 7v6h-6"></path>
+        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"></path>
+      </svg>
+    </button>
+  </div>
+</div>

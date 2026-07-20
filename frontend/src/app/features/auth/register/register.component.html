@@ -1,0 +1,89 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+      </div>
+      <h1>Create account</h1>
+      <p>Start collaborating with your team</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input
+          id="displayName"
+          type="text"
+          class="input"
+          formControlName="displayName"
+          placeholder="John Doe"
+          autofocus
+        />
+        <div class="form-error" *ngIf="registerForm.get('displayName')?.touched && registerForm.get('displayName')?.invalid">
+          Display name is required (min 2 characters)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          class="input"
+          formControlName="email"
+          placeholder="you@example.com"
+        />
+        <div class="form-error" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid">
+          Please enter a valid email
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          class="input"
+          formControlName="password"
+          placeholder="••••••••"
+        />
+        <div class="form-error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid">
+          Password must be at least 6 characters
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          class="input"
+          formControlName="confirmPassword"
+          placeholder="••••••••"
+        />
+        <div class="form-error" *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid">
+          Please confirm your password
+        </div>
+      </div>
+
+      <div class="form-error" *ngIf="error()">
+        {{ error() }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" [disabled]="loading() || registerForm.invalid">
+        <span *ngIf="loading()">Creating account...</span>
+        <span *ngIf="!loading()">Create account</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+    </div>
+  </div>
+</div>

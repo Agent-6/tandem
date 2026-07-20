@@ -1,0 +1,28 @@
+<div class="presence-panel" *ngIf="users.length > 0">
+  <div class="presence-header">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+    <span>Active Users</span>
+    <span class="user-count">{{ users.length }}</span>
+  </div>
+  <div class="presence-list">
+    <div
+      class="presence-item"
+      *ngFor="let user of users"
+      [style.--user-color]="user.avatarColor"
+    >
+      <div class="user-avatar">
+        <span class="avatar-initials">{{ getInitials(user.displayName) }}</span>
+        <span class="avatar-status"></span>
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ user.displayName }}</span>
+        <span class="user-status">Editing</span>
+      </div>
+    </div>
+  </div>
+</div>

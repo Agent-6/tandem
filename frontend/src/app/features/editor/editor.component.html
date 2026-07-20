@@ -1,0 +1,82 @@
+<div class="editor-container">
+  <!-- Header -->
+  <div class="editor-header">
+    <div class="header-left">
+      <button class="btn-icon" (click)="goBack()" title="Back to dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <div class="document-title">
+        <h1 *ngIf="!editingTitle()" (click)="startEditTitle()" class="title-text">
+          {{ titleForm.get('title')?.value }}
+        </h1>
+        <form [formGroup]="titleForm" *ngIf="editingTitle()">
+          <input
+            formControlName="title"
+            (blur)="saveTitle()"
+            (keyup.enter)="saveTitle()"
+            class="title-input"
+            autoFocus
+          />
+        </form>
+        <span class="connection-status" [class.connected]="connected()">
+          <span class="status-dot"></span>
+          {{ connected() ? 'Connected' : 'Connecting...' }}
+        </span>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" (click)="openShare()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        Share
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Editor Area -->
+  <div class="editor-main">
+    <!-- Toolbar -->
+    <app-toolbar
+      [editor]="editor"
+      (toggleBold)="onToggleBold()"
+      (toggleItalic)="onToggleItalic()"
+      (toggleUnderline)="onToggleUnderline()"
+      (toggleStrike)="onToggleStrike()"
+      (toggleCode)="onToggleCode()"
+      (toggleHeading)="onToggleHeading($event)"
+      (toggleBulletList)="onToggleBulletList()"
+      (toggleOrderedList)="onToggleOrderedList()"
+      (toggleTaskList)="onToggleTaskList()"
+      (toggleBlockquote)="onToggleBlockquote()"
+      (undo)="onUndo()"
+      (redo)="onRedo()"
+    />
+
+    <!-- Presence Panel -->
+    <app-presence-panel [users]="presenceUsers()" />
+
+    <!-- Editor Content -->
+    <div class="editor-content-wrapper">
+      <div #editorElement class="editor-element"></div>
+    </div>
+  </div>
+
+  <!-- Share Dialog -->
+  <app-share-dialog
+    [isOpen]="showShareDialog()"
+    [documentId]="documentId"
+    [permissions]="document()?.collaborators || []"
+    (close)="closeShare()"
+    (share)="onShare($event)"
+    (remove)="onRemoveShare($event)"
+    (updateRole)="onUpdateShare($event)"
+  />
+</div>
