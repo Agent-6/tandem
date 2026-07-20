@@ -1,4 +1,4 @@
-<div class="editor-container">
+<div class="editor-container" (keydown)="onKeyDown($event)">
   <!-- Header -->
   <div class="editor-header">
     <div class="header-left">
@@ -23,7 +23,7 @@
         </form>
         <span class="connection-status" [class.connected]="connected()">
           <span class="status-dot"></span>
-          {{ connected() ? 'Connected' : 'Connecting...' }}
+          {{ isSaving() ? 'Saving...' : (connected() ? 'Connected' : 'Connecting...') }}
         </span>
       </div>
     </div>

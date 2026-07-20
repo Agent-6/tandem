@@ -81,7 +81,12 @@ export class SignalRService {
   async sendYjsUpdate(documentId: string, update: Uint8Array): Promise<void> {
     if (this.connection?.state === HubConnectionState.Connected) {
       const base64 = this.uint8ArrayToBase64(update);
+      console.log('[SignalR] Sending Yjs update:', update.byteLength, 'bytes');
       await this.connection.invoke('SendYjsUpdate', documentId, base64);
+      console.log('[SignalR] Yjs update sent successfully');
+    } else {
+      console.error('[SignalR] Cannot send Yjs update: connection not connected (state:', this.connection?.state, ')');
+      throw new Error('SignalR connection not established');
     }
   }
 
@@ -89,6 +94,37 @@ export class SignalRService {
     if (this.connection?.state === HubConnectionState.Connected) {
       const base64 = this.uint8ArrayToBase64(update);
       await this.connection.invoke('SendAwareness', documentId, base64);
+    } else {
+      console.warn('[SignalR] Cannot send awareness update: connection not connected (state:', this.connection?.state, ')');
+    }
+  }
+
+  /**
+   * Forces an immediate save of the document state to the database.
+   */
+  async saveDocument(documentId: string): Promise<void> {
+    if (this.connection?.state === HubConnectionState.Connected) {
+      console.log('[SignalR] Sending SaveDocument request for:', documentId);
+      await this.connection.invoke('SaveDocument', documentId);
+      console.log('[SignalR] SaveDocument request sent successfully');
+    } else {
+      console.error('[SignalR] Cannot save document: connection not connected (state:', this.connection?.state, ')');
+      throw new Error('SignalR connection not established');
+    }
+  }
+
+  /**
+   * Sends a full Yjs state sync to the server.
+   */
+  async sendFullState(documentId: string, fullState: Uint8Array): Promise<void> {
+    if (this.connection?.state === HubConnectionState.Connected) {
+      const base64 = this.uint8ArrayToBase64(fullState);
+      console.log('[SignalR] Sending full state:', fullState.byteLength, 'bytes');
+      await this.connection.invoke('SendFullState', documentId, base64);
+      console.log('[SignalR] Full state sent successfully');
+    } else {
+      console.error('[SignalR] Cannot send full state: connection not connected (state:', this.connection?.state, ')');
+      throw new Error('SignalR connection not established');
     }
   }
 
@@ -96,10 +132,14 @@ export class SignalRService {
     if (!this.connection) return;
 
     this.connection.on('DocumentState', (base64: string) => {
+      console.log('[SignalR] DocumentState handler called, base64:', base64 ? `${base64.length} chars` : 'null/undefined');
       this.zone.run(() => {
         if (base64) {
-          this.initialState$.next(this.base64ToUint8Array(base64));
+          const state = this.base64ToUint8Array(base64);
+          console.log('[SignalR] Decoded DocumentState:', state.byteLength, 'bytes');
+          this.initialState$.next(state);
         } else {
+          console.log('[SignalR] DocumentState is empty/null');
           this.initialState$.next(null);
         }
       });

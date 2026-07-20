@@ -22,6 +22,11 @@ export class SignalRProvider {
     origin: unknown,
   ) => void;
 
+  // Debounce: accumulate updates and send in batches
+  private pendingUpdates: Uint8Array[] = [];
+  private sendTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly DEBOUNCE_MS = 500;
+
   constructor(
     private documentId: string,
     doc: Y.Doc,
@@ -30,10 +35,12 @@ export class SignalRProvider {
     this.doc = doc;
     this.awareness = new Awareness(doc);
 
-    // When the local Yjs doc changes, send the update to other clients via SignalR
+    // When the local Yjs doc changes, debounce and batch updates
     this.updateHandler = (update: Uint8Array, origin: unknown) => {
       if (origin !== 'remote') {
-        this.signalr.sendYjsUpdate(this.documentId, update).catch(console.error);
+        console.log('[YjsProvider] Local update detected:', update.byteLength, 'bytes');
+        this.pendingUpdates.push(update);
+        this.scheduleSend();
       }
     };
     this.doc.on('update', this.updateHandler);
@@ -69,9 +76,52 @@ export class SignalRProvider {
   }
 
   /**
+   * Schedule sending accumulated updates after debounce delay.
+   * If already scheduled, reset the timer.
+   */
+  private scheduleSend(): void {
+    if (this.sendTimer) {
+      clearTimeout(this.sendTimer);
+    }
+    this.sendTimer = setTimeout(async () => {
+      if (this.pendingUpdates.length === 0) return;
+
+      // Merge all pending updates into a single update
+      const merged = Y.mergeUpdates(this.pendingUpdates);
+      this.pendingUpdates = [];
+
+      console.log('[YjsProvider] Sending merged update:', merged.byteLength, 'bytes');
+      await this.signalr.sendYjsUpdate(this.documentId, merged).catch((err) => {
+        console.error('[YjsProvider] Failed to send merged update:', err);
+      });
+    }, this.DEBOUNCE_MS);
+  }
+
+  /**
+   * Save the current document state to the server before destroying.
+   * This ensures no pending updates are lost.
+   */
+  async save(): Promise<void> {
+    console.log('[YjsProvider] Saving document state...');
+    // Encode the current Yjs state as a binary update
+    const state = Y.encodeStateAsUpdate(this.doc);
+    console.log('[YjsProvider] Encoded state:', state.byteLength, 'bytes');
+    if (state && state.byteLength > 0) {
+      await this.signalr.sendFullState(this.documentId, state);
+      console.log('[YjsProvider] Save completed successfully');
+    } else {
+      console.warn('[YjsProvider] No state to save (empty document)');
+    }
+  }
+
+  /**
    * Clean up all listeners and subscriptions.
    */
   destroy(): void {
+    if (this.sendTimer) {
+      clearTimeout(this.sendTimer);
+      this.sendTimer = null;
+    }
     this.doc.off('update', this.updateHandler);
     this.awareness.off('update', this.awarenessHandler);
     this.subscriptions.forEach((s) => s.unsubscribe());

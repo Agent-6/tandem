@@ -55,6 +55,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   presenceUsers = signal<PresenceUser[]>([]);
   showShareDialog = signal(false);
   editingTitle = signal(false);
+  isSaving = signal(false);
   titleForm!: FormGroup;
 
   private ydoc!: Y.Doc;
@@ -107,10 +108,70 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initializeEditor();
+
+    // Save on page unload (browser close, navigation away)
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
+  }
+
+  handleBeforeUnload = (): void => {
+    // Save document state before the page unloads
+    if (this.provider && this.documentId) {
+      // Use sendBeacon-compatible approach: fire-and-forget save
+      this.provider.save().catch(() => {});
+    }
+  }
+
+  /**
+   * Handle keyboard shortcuts. Called on keydown events.
+   */
+  onKeyDown(event: KeyboardEvent): void {
+    // Ctrl+S / Cmd+S: Force save
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault();
+      this.forceSave();
+    }
+  }
+
+  /**
+   * Force save the document state to the server.
+   */
+  async forceSave(): Promise<void> {
+    console.log('[Editor] Force save triggered');
+    this.isSaving.set(true);
+    try {
+      if (this.provider) {
+        console.log('[Editor] Saving via provider...');
+        await this.provider.save();
+        console.log('[Editor] Provider save completed');
+      }
+      if (this.signalr && this.documentId) {
+        console.log('[Editor] Saving via SignalR...');
+        await this.signalr.saveDocument(this.documentId);
+        console.log('[Editor] SignalR save completed');
+      }
+      console.log('[Editor] Save successful');
+    } catch (err) {
+      console.error('[Editor] Save failed:', err);
+      this.isSaving.set(false);
+      return;
+    }
+    setTimeout(() => this.isSaving.set(false), 1000);
   }
 
   ngOnDestroy(): void {
     if (this.titleSaveTimeout) clearTimeout(this.titleSaveTimeout);
+
+    // Remove beforeunload listener
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
+
+    // Save document state before destroying to prevent data loss
+    if (this.provider) {
+      this.provider.save().catch(() => {});
+    }
+    if (this.signalr && this.documentId) {
+      this.signalr.saveDocument(this.documentId).catch(() => {});
+    }
+
     this.editor?.destroy();
     this.provider?.destroy();
     this.ydoc?.destroy();
@@ -119,45 +180,12 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async initializeEditor(): Promise<void> {
+    console.log('[Editor] Initializing editor for document:', this.documentId);
     // 1. Create Yjs document
     this.ydoc = new Y.Doc();
 
-    // 2. Connect SignalR and get initial state
-    try {
-      await this.signalr.connect(this.documentId);
-    } catch (err) {
-      console.error('Failed to connect:', err);
-      return;
-    }
-
-    // 3. Listen for initial state and apply it
-    let stateReceived = false;
-    this.subscriptions.push(
-      this.signalr.onInitialState.subscribe((state) => {
-        console.log('[Editor] Initial state received:', state ? 'has data' : 'empty');
-        if (state && state.byteLength > 0) {
-          Y.applyUpdate(this.ydoc, state);
-        }
-        if (!stateReceived) {
-          stateReceived = true;
-          this.setupEditor();
-        }
-      }),
-    );
-
-    // Timeout to setup editor even if no state received (for new documents)
-    setTimeout(() => {
-      if (!stateReceived) {
-        console.log('[Editor] No state received, setting up editor anyway');
-        stateReceived = true;
-        this.setupEditor();
-      }
-    }, 2000);
-  }
-
-  private setupEditor(): void {
-    console.log('[Editor] Setting up editor...');
-    // 4. Create the SignalR ↔ Yjs bridge
+    // 2. Create the provider IMMEDIATELY (before connecting) to capture any updates
+    console.log('[Editor] Creating SignalR provider...');
     this.provider = new SignalRProvider(this.documentId, this.ydoc, this.signalr);
 
     // Set local user awareness
@@ -168,6 +196,46 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         color: user.avatarColor || '#7c5cff',
       });
     }
+
+    // 3. Subscribe to initial state BEFORE connecting (race condition fix)
+    let stateReceived = false;
+    this.subscriptions.push(
+      this.signalr.onInitialState.subscribe((state) => {
+        console.log('[Editor] Initial state received:', state ? `has data (${state.byteLength} bytes)` : 'empty');
+        if (state && state.byteLength > 0) {
+          Y.applyUpdate(this.ydoc, state);
+          console.log('[Editor] Applied initial state to Yjs doc');
+        }
+        if (!stateReceived) {
+          stateReceived = true;
+          console.log('[Editor] Initial state received, setting up editor...');
+          this.setupEditor();
+        }
+      }),
+    );
+
+    // 4. Connect SignalR and get initial state
+    try {
+      console.log('[Editor] Connecting to SignalR...');
+      await this.signalr.connect(this.documentId);
+      console.log('[Editor] SignalR connected successfully');
+    } catch (err) {
+      console.error('[Editor] Failed to connect:', err);
+      return;
+    }
+
+    // Timeout to setup editor even if no state received (for new documents)
+    setTimeout(() => {
+      if (!stateReceived) {
+        console.warn('[Editor] No state received within timeout, setting up editor anyway');
+        stateReceived = true;
+        this.setupEditor();
+      }
+    }, 5000);
+  }
+
+  private setupEditor(): void {
+    console.log('[Editor] Setting up Tiptap editor...');
 
     // 5. Initialize Tiptap with Yjs collaboration
     this.editor = new Editor({
@@ -196,7 +264,7 @@ export class EditorComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('[Editor] Tiptap editor created, editable:', editor.isEditable);
       },
       onUpdate: ({ editor }) => {
-        console.log('[Editor] Tiptap editor updated');
+        console.log('[Editor] Tiptap content updated');
       },
     });
   }
